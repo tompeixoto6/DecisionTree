@@ -123,6 +123,7 @@ class DecisionTree:
                 min_val, max_val = min(column_values), max(column_values)
                 bin_width = (max_val - min_val) / bins
                 bin_edges = [min_val + j * bin_width for j in range(bins)] + [max_val]
+                bin_edges = [round(edge, 2) for edge in bin_edges]  # Round bin edges
                 self.bins[i] = [(bin_edges[j], bin_edges[j+1]) for j in range(bins)]
                 for j in range(len(self.X)):
                     for k in range(bins):
@@ -145,35 +146,28 @@ def read_test_csv(file_path):
 
 def build_tree_dict(node):
     if not node.childs:
-        return (node.value, node.count)
+        return node.value
     tree_dict = {}
     for child in node.childs:
         tree_dict[child.value] = build_tree_dict(child.next)
-    return (node.value, tree_dict)
+    return {node.value: tree_dict}
 
 def print_tree(tree, depth=0):
-    if isinstance(tree, tuple):
-        attribute, subtree = tree
-        if isinstance(subtree, dict):
-            print("  " * depth + f"<{attribute}>")
-            for value, child_tree in subtree.items():
-                print("  " * (depth + 1) + f"{value}:")
-                print_tree(child_tree, depth + 2)
-        elif isinstance(subtree, tuple):
-            label, count = subtree
-            print("  " * depth + f"{attribute}: {label} ({count})")
-        else:
-            print("  " * depth + f"{attribute}: {subtree}")
+    if isinstance(tree, dict):
+        for key, value in tree.items():
+            print("  " * depth + f"<{key}>")
+            print_tree(value, depth + 1)
     else:
         print("  " * depth + str(tree))
 
-def classify(tree, instance):
-    if not isinstance(tree, tuple):
+def classify(tree, instance, feature_names):
+    if not isinstance(tree, dict):
         return tree
-    root, subtree = tree
-    for value, sub in subtree.items():
-        if instance[root] == value:
-            return classify(sub, instance)
+    for attribute, subtree in tree.items():
+        attribute_index = feature_names.index(attribute)
+        attribute_value = instance[attribute_index]
+        if attribute_value in subtree:
+            return classify(subtree[attribute_value], instance, feature_names)
     return None
 
 def get_value_distribution(X, labels):
@@ -229,3 +223,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
