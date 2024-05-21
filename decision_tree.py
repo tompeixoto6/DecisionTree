@@ -264,7 +264,12 @@ def main():
         tree = id3(training_data, label)
         print('Feature Names:', list(training_data.columns[:-1]))
         print('Labels:', training_data[label].unique())
-        print('Label Distribution:', training_data[label].value_counts())
+         
+        label_distribution = training_data[label].value_counts()
+        print('Label Distribution:')
+        for index, value in label_distribution.items():
+            print(f'{index} -> {value}')
+        
         print('\n')
         print('Tree Structure:')
         print_tree(tree)
